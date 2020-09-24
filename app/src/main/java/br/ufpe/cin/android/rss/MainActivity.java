@@ -56,17 +56,21 @@ public class MainActivity extends AppCompatActivity {
     );
     adapter = new RssAdapter(getApplicationContext());
     conteudoRSS.setAdapter(adapter);
+
+    // Shimmer element para efeito shimmer
     shimmerFrameLayout = (ShimmerFrameLayout) findViewById(R.id.shimmerFrameLayout);
   }
 
   @Override
   protected void onResume() {
     super.onResume();
+    // Referente ao shimmer effect
     shimmerFrameLayout.startShimmer();
   }
 
   @Override
   protected void onPause() {
+    // Referente ao shimmer effect
     shimmerFrameLayout.stopShimmer();
     super.onPause();
   }
@@ -108,11 +112,12 @@ public class MainActivity extends AppCompatActivity {
           noticias = channel.getArticles();
           runOnUiThread(
             () -> {
+              adapter.setNoticias(noticias);
+              adapter.notifyDataSetChanged();
+              // Alterando layout para mostrar os dados
               shimmerFrameLayout.stopShimmer();
               shimmerFrameLayout.setVisibility(View.GONE);
               conteudoRSS.setVisibility(View.VISIBLE);
-              adapter.setNoticias(noticias);
-              adapter.notifyDataSetChanged();
             }
           );
 
@@ -121,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onError(Exception e) {
           Log.e(APP_TAG, "loadFeed: onError" + e.getMessage());
+          // Referente ao shimmer effect
           shimmerFrameLayout.stopShimmer();
           shimmerFrameLayout.setVisibility(View.GONE);
         }
