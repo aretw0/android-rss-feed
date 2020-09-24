@@ -6,11 +6,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.prof.rssparser.Article;
 
 import java.util.List;
 
-public class RssAdapter extends BaseAdapter {
+public class RssAdapter extends RecyclerView.Adapter<ItemRssViewHolder> {
 
     List<Article> noticias;
     Context c;
@@ -21,37 +24,34 @@ public class RssAdapter extends BaseAdapter {
     }
 
     @Override
-    public int getCount() {
+    public int getItemCount() {
         return noticias.size();
     }
 
-    @Override
     public Object getItem(int i) {
         return noticias.get(i);
     }
 
+    @NonNull
     @Override
-    public long getItemId(int i) {
-        return i;
+    public ItemRssViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        return new ItemRssViewHolder(
+            LayoutInflater.from(c).inflate(R.layout.linha, parent, false)
+        );
     }
 
     @Override
-    public View getView(int i, View view, ViewGroup parent) {
-        View v;
-        ItemRssViewHolder viewHolder;
-        if (view==null) {
-            v = LayoutInflater.from(c).inflate(R.layout.item,parent,false);
-            viewHolder = new ItemRssViewHolder(v);
-            v.setTag(viewHolder);
-        }
-        else {
-            v = view;
-            viewHolder = (ItemRssViewHolder) v.getTag();
-        }
+    public void onBindViewHolder(@NonNull ItemRssViewHolder viewHolder, int position) {
+        Article notice = noticias.get(position);
+        viewHolder.titulo.setText(notice.getTitle());
+        viewHolder.dataPublicacao.setText(notice.getPubDate());
+        /*
+        Picasso.get().load(notice.getImage())
+                .placeholder(R.drawable.ic_image_unloaded)
+                .error(R.drawable.ic_image_unloaded_error)
+                .resize(140, 140)
+                .centerCrop()
+                .into(viewHolder.thumb);*/
 
-        Article noticia = noticias.get(i);
-        viewHolder.titulo.setText(noticia.getTitle());
-
-        return v;
     }
 }

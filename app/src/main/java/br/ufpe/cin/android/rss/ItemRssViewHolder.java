@@ -15,7 +15,7 @@ public class ItemRssViewHolder extends RecyclerView.ViewHolder {
 
     public ItemRssViewHolder(@NonNull View v) {
         super(v);
-        this.titulo = v.findViewById(R.id.tituloNoticia);
+        this.titulo = v.findViewById(R.id.titulo);
         this.dataPublicacao = v.findViewById(R.id.dataPublicacao);
         this.imagem = v.findViewById(R.id.imagem);
     }
