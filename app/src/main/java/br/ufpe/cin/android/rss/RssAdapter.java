@@ -58,6 +58,7 @@ public class RssAdapter extends RecyclerView.Adapter<ItemRssViewHolder> {
         viewHolder.titulo.setText(notice.getTitle());
         viewHolder.dataPublicacao.setText(notice.getPubDate());
 
+        // Configuração do glide para carregamento das imagens
         RequestOptions requestOption = new RequestOptions()
                 .fallback(R.drawable.ic_baseline_image_24)
                 .error(R.drawable.ic_baseline_cloud_off_24)
