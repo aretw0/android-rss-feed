@@ -8,7 +8,11 @@ import android.widget.BaseAdapter;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.bumptech.glide.request.RequestOptions;
 import com.prof.rssparser.Article;
 
 import java.util.List;
@@ -23,6 +27,10 @@ public class RssAdapter extends RecyclerView.Adapter<ItemRssViewHolder> {
         this.noticias = noticias;
     }
 
+    public RssAdapter(Context c) {
+        this.c = c;
+    }
+
     @Override
     public int getItemCount() {
         return noticias.size();
@@ -30,6 +38,10 @@ public class RssAdapter extends RecyclerView.Adapter<ItemRssViewHolder> {
 
     public Object getItem(int i) {
         return noticias.get(i);
+    }
+
+    public void setNoticias(List<Article> noticias) {
+        this.noticias = noticias;
     }
 
     @NonNull
@@ -45,13 +57,17 @@ public class RssAdapter extends RecyclerView.Adapter<ItemRssViewHolder> {
         Article notice = noticias.get(position);
         viewHolder.titulo.setText(notice.getTitle());
         viewHolder.dataPublicacao.setText(notice.getPubDate());
-        /*
-        Picasso.get().load(notice.getImage())
-                .placeholder(R.drawable.ic_image_unloaded)
-                .error(R.drawable.ic_image_unloaded_error)
-                .resize(140, 140)
-                .centerCrop()
-                .into(viewHolder.thumb);*/
 
+        RequestOptions requestOption = new RequestOptions()
+                .fallback(R.drawable.ic_baseline_image_24)
+                .error(R.drawable.ic_baseline_cloud_off_24)
+                .placeholder(R.drawable.ic_baseline_cloud_download_24)
+                .centerCrop();
+
+        Glide.with(this.c)
+                .load(notice.getImage())
+                .transition(DrawableTransitionOptions.withCrossFade())
+                .apply(requestOption)
+                .into(viewHolder.imagem);
     }
 }

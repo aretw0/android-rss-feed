@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">RSS - ALVESSIL</string>
     <string name="feed_padrao">https://g1.globo.com/dynamo/rss2.xml</string>
+    <string name="imagem_cd">Imagem da notícia</string>
 </resources>

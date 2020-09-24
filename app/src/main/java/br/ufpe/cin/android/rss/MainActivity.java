@@ -1,6 +1,7 @@
 package br.ufpe.cin.android.rss;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -12,6 +13,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.facebook.shimmer.ShimmerFrameLayout;
 import com.prof.rssparser.Article;
 import com.prof.rssparser.Channel;
 import com.prof.rssparser.OnTaskCompleted;
@@ -31,7 +33,9 @@ public class MainActivity extends AppCompatActivity {
 
   // Declarando recycler view
   RecyclerView conteudoRSS;
+  RssAdapter adapter;
   List<Article> noticias;
+  ShimmerFrameLayout shimmerFrameLayout;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +48,27 @@ public class MainActivity extends AppCompatActivity {
     conteudoRSS = findViewById(R.id.conteudoRSS);
     conteudoRSS.setHasFixedSize(true);
     conteudoRSS.setLayoutManager(new LinearLayoutManager(this));
+    conteudoRSS.addItemDecoration(
+      new DividerItemDecoration(
+        getApplicationContext(),
+        ((LinearLayoutManager) conteudoRSS.getLayoutManager()).getOrientation()
+      )
+    );
+    adapter = new RssAdapter(getApplicationContext());
+    conteudoRSS.setAdapter(adapter);
+    shimmerFrameLayout = (ShimmerFrameLayout) findViewById(R.id.shimmerFrameLayout);
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    shimmerFrameLayout.startShimmer();
+  }
+
+  @Override
+  protected void onPause() {
+    shimmerFrameLayout.stopShimmer();
+    super.onPause();
   }
 
   @Override
@@ -70,6 +95,9 @@ public class MainActivity extends AppCompatActivity {
       */
   }
 
+
+
+
   private void loadFeed(String url) {
     Parser p = new Parser.Builder().build();
     p.onFinish(
@@ -80,11 +108,11 @@ public class MainActivity extends AppCompatActivity {
           noticias = channel.getArticles();
           runOnUiThread(
             () -> {
-              RssAdapter adapter = new RssAdapter(
-                getApplicationContext(),
-                noticias
-              );
-              conteudoRSS.setAdapter(adapter);
+              shimmerFrameLayout.stopShimmer();
+              shimmerFrameLayout.setVisibility(View.GONE);
+              conteudoRSS.setVisibility(View.VISIBLE);
+              adapter.setNoticias(noticias);
+              adapter.notifyDataSetChanged();
             }
           );
 
@@ -93,6 +121,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onError(Exception e) {
           Log.e(APP_TAG, "loadFeed: onError" + e.getMessage());
+          shimmerFrameLayout.stopShimmer();
+          shimmerFrameLayout.setVisibility(View.GONE);
         }
       }
     );
