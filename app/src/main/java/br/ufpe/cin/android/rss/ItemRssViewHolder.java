@@ -1,12 +1,22 @@
 package br.ufpe.cin.android.rss;
 
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-public class ItemRssViewHolder {
-    TextView titulo = null;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
-    public ItemRssViewHolder(View v) {
+public class ItemRssViewHolder extends RecyclerView.ViewHolder {
+    TextView titulo = null;
+    // Adicionado outros elementos
+    TextView dataPublicacao;
+    ImageView imagem;
+
+    public ItemRssViewHolder(@NonNull View v) {
+        super(v);
         this.titulo = v.findViewById(R.id.tituloNoticia);
+        this.dataPublicacao = v.findViewById(R.id.dataPublicacao);
+        this.imagem = v.findViewById(R.id.imagem);
     }
 }
