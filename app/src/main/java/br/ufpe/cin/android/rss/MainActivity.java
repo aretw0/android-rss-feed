@@ -5,7 +5,9 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -29,7 +31,9 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
   private String APP_TAG;
-  private String RSS_FEED;
+  private String RSS_FEED = "rssfeed";
+
+  private String URL_FEED;
 
   // Declarando recycler view
   RecyclerView conteudoRSS;
@@ -37,13 +41,28 @@ public class MainActivity extends AppCompatActivity {
   List<Article> noticias;
   ShimmerFrameLayout shimmerFrameLayout;
 
+  // ponto-3 shared preferences
+  private SharedPreferences prefs;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    APP_TAG = getString(R.string.app_name);
-    RSS_FEED = getString(R.string.feed_padrao);
-    Log.d(APP_TAG, "onCreate");
     setContentView(R.layout.activity_main);
+
+    Log.d(APP_TAG, "onCreate");
+
+    prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+    //ATUALIZANDO A PREFERENCE
+    SharedPreferences.Editor e = prefs.edit();
+    e.putString(RSS_FEED, "https://www.ahnegao.com.br/feed");
+    e.commit();
+
+
+    URL_FEED = prefs.getString(RSS_FEED, getString(R.string.feed_padrao));
+
+    APP_TAG = getString(R.string.app_name);
+
     // Preparando recycler view
     conteudoRSS = findViewById(R.id.conteudoRSS);
     conteudoRSS.setHasFixedSize(true);
@@ -80,7 +99,9 @@ public class MainActivity extends AppCompatActivity {
     super.onStart();
     Log.d(APP_TAG, "onStart");
 
-    loadFeed(RSS_FEED);
+    loadFeed(URL_FEED);
+
+
       /*
       new Thread(
               () -> {
