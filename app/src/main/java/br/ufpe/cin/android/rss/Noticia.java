@@ -14,13 +14,15 @@ public class Noticia {
     private String descricao;
     private List<String> categorias;
     private String data;
+    private String imagem;
 
-    public Noticia(@NonNull String link, String titulo, String descricao, List<String> categorias, String data) {
+    public Noticia(@NonNull String link, String titulo, String descricao, List<String> categorias, String data, String imagem) {
         this.link = link;
         this.titulo = titulo;
         this.descricao = descricao;
         this.categorias = categorias;
         this.data = data;
+        this.imagem = imagem;
     }
 
     @NonNull
@@ -62,5 +64,13 @@ public class Noticia {
 
     public void setData(String data) {
         this.data = data;
+    }
+
+    public String getImagem() {
+        return imagem;
+    }
+
+    public void setImagem(String imagem) {
+        this.imagem = imagem;
     }
 }
