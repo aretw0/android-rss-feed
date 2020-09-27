@@ -6,29 +6,62 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorGrey"
+        android:elevation="4dp"
+        android:theme="@style/AppTheme"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        app:title="@string/app_name"
+        app:titleTextColor="@color/colorNoticeTitleText"/>
+
+
     <com.facebook.shimmer.ShimmerFrameLayout
         android:id="@+id/shimmerFrameLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        app:shimmer_shape="radial"
+        app:shimmer_direction="left_to_right"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
             <include layout="@layout/linha_placeholder" />
+
             <include layout="@layout/linha_placeholder" />
+
             <include layout="@layout/linha_placeholder" />
+
             <include layout="@layout/linha_placeholder" />
+
             <include layout="@layout/linha_placeholder" />
+
             <include layout="@layout/linha_placeholder" />
+
             <include layout="@layout/linha_placeholder" />
+
             <include layout="@layout/linha_placeholder" />
         </LinearLayout>
     </com.facebook.shimmer.ShimmerFrameLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/conteudoRSS"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone" />
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.52"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar"
+        app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
