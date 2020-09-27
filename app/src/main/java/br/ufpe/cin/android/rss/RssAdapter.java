@@ -19,10 +19,10 @@ import java.util.List;
 
 public class RssAdapter extends RecyclerView.Adapter<ItemRssViewHolder> {
 
-    List<Article> noticias;
+    List<Noticia> noticias;
     Context c;
 
-    public RssAdapter(Context c, List<Article> noticias) {
+    public RssAdapter(Context c, List<Noticia> noticias) {
         this.c = c;
         this.noticias = noticias;
     }
@@ -40,7 +40,7 @@ public class RssAdapter extends RecyclerView.Adapter<ItemRssViewHolder> {
         return noticias.get(i);
     }
 
-    public void setNoticias(List<Article> noticias) {
+    public void setNoticias(List<Noticia> noticias) {
         this.noticias = noticias;
     }
 
@@ -54,9 +54,9 @@ public class RssAdapter extends RecyclerView.Adapter<ItemRssViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ItemRssViewHolder viewHolder, int position) {
-        Article notice = noticias.get(position);
-        viewHolder.titulo.setText(notice.getTitle());
-        viewHolder.dataPublicacao.setText(notice.getPubDate());
+        Noticia notice = noticias.get(position);
+        viewHolder.titulo.setText(notice.getTitulo());
+        viewHolder.dataPublicacao.setText(notice.getData());
 
         // Configuração do glide para carregamento das imagens
         RequestOptions requestOption = new RequestOptions()
@@ -66,7 +66,7 @@ public class RssAdapter extends RecyclerView.Adapter<ItemRssViewHolder> {
                 .centerCrop();
 
         Glide.with(this.c)
-                .load(notice.getImage())
+                .load(notice.getImagem())
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .apply(requestOption)
                 .into(viewHolder.imagem);
