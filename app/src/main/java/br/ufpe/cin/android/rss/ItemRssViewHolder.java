@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.prof.rssparser.Article;
 
 public class ItemRssViewHolder extends RecyclerView.ViewHolder {
-    TextView titulo = null;
+    TextView titulo;
     // Adicionado outros elementos
     TextView dataPublicacao;
     ImageView imagem;
@@ -31,7 +31,7 @@ public class ItemRssViewHolder extends RecyclerView.ViewHolder {
                 RecyclerView conteudoRSS = (RecyclerView) v.getParent();
                 RssAdapter rssAdapter = (RssAdapter) conteudoRSS.getAdapter();
                 //O adapter guarda objetos do tipo Pessoa, de acordo com o parâmetro de tipo.
-                Article n = (Article) rssAdapter.getItem(position);
+                Noticia n = (Noticia) rssAdapter.getItem(position);
                 //Tendo acesso a um objeto noticia, podemos chamar qualquer método disponível.
 
                 // Preparando intent
