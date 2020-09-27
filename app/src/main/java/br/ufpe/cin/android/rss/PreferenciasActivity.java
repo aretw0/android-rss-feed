@@ -11,11 +11,9 @@ public class PreferenciasActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_preferencias);
         //Após criar o fragmento, use o código abaixo para exibir
-        /*
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.settings,new PrefsFragment())
                 .commit();
-        /**/
     }
 }
