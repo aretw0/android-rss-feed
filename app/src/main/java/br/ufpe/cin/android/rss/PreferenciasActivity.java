@@ -36,6 +36,7 @@ public class PreferenciasActivity extends AppCompatActivity {
                         // Write your code here
                         String URL_NOW = sharedPreferences.getString(key, getString(R.string.feed_padrao));
 
+                        // se a URL realmente mudou apague o banco
                         if (URL_FEED.get() != URL_NOW) {
                             URL_FEED.set(URL_NOW);
                             new Thread(
