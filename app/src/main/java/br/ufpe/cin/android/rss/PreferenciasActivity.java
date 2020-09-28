@@ -13,6 +13,7 @@ public class PreferenciasActivity extends AppCompatActivity {
 
     private String APP_TAG;
     private String RSS_FEED = "rssfeed";
+    // Para ser usado entre threads
     private AtomicReference<String> URL_FEED;
 
     @Override
