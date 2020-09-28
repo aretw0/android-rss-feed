@@ -82,29 +82,29 @@ public class MainActivity extends AppCompatActivity {
         Button errorButton = findViewById(R.id.botaoError);
 
         errorButton.setOnClickListener(
-                v -> {
-                    loadFeed(getLatestFeed());
-                }
+            v -> {
+                loadFeed(getLatestFeed());
+            }
         );
 
         // pull to refresh
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         swipeRefreshLayout.setOnRefreshListener(
-                new SwipeRefreshLayout.OnRefreshListener() {
-                    @Override
-                    public void onRefresh() {
-                        loadFeed(getLatestFeed());
-                    }
+            new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    loadFeed(getLatestFeed());
                 }
+            }
         );
         // Preparando recycler view
         conteudoRSS = findViewById(R.id.conteudoRSS);
         conteudoRSS.setHasFixedSize(true);
         conteudoRSS.addItemDecoration(
-                new DividerItemDecoration(
-                        getApplicationContext(),
-                        ((LinearLayoutManager) conteudoRSS.getLayoutManager()).getOrientation()
-                )
+            new DividerItemDecoration(
+                getApplicationContext(),
+                ((LinearLayoutManager) conteudoRSS.getLayoutManager()).getOrientation()
+            )
         );
         adapter = new RssAdapter(getApplicationContext());
         conteudoRSS.setAdapter(adapter);
@@ -166,14 +166,14 @@ public class MainActivity extends AppCompatActivity {
     private void checkDB() {
         checkingDB.set(true);
         new Thread(
-                () -> {
-                    NoticiasDB db = NoticiasDB.getInstance(getApplicationContext());
-                    NoticiasDAO dao = db.obterDAO();
-                    List<Noticia> noticias = dao.todasNoticias();
-                    emptyDb.set(noticias.isEmpty());
-                    populateRecycler(noticias);
-                    checkingDB.set(false);
-                }
+            () -> {
+                NoticiasDB db = NoticiasDB.getInstance(getApplicationContext());
+                NoticiasDAO dao = db.obterDAO();
+                List<Noticia> noticias = dao.todasNoticias();
+                emptyDb.set(noticias.isEmpty());
+                populateRecycler(noticias);
+                checkingDB.set(false);
+            }
         ).start();
     }
 
@@ -274,43 +274,43 @@ public class MainActivity extends AppCompatActivity {
 
             // Tirando qualquer erro da tela e ativando o efeito shimmer
             runOnUiThread(
-                    () -> {
-                        setError("",false);
-                        shimmer(emptyDb.get());
-                    }
+                () -> {
+                    setError("",false);
+                    shimmer(emptyDb.get());
+                }
             );
             Parser p = new Parser.Builder().build();
             p.onFinish(
-                    new OnTaskCompleted() {
-                        @Override
-                        public void onTaskCompleted(Channel channel) {
-                            requestingFeed.set(false);
-                            Log.d(APP_TAG, "loadFeed: onTaskCompleted");
-                            noticias = channel.getArticles();
-                            updateDB(noticias);
-                        }
-
-                        @Override
-                        public void onError(Exception e) {
-                            requestingFeed.set(false);
-                            String text = e.getCause().getMessage();
-                            Log.e(APP_TAG, String.format("loadFeed: onError %s", text));
-                            // Colocando erros na tela caso o banco esteja vazio
-                            runOnUiThread(
-                                    () -> {
-                                        shimmer(false);
-                                        swipeRefreshLayout.setRefreshing(false);
-                                        showToast(text, Toast.LENGTH_LONG);
-                                        if (emptyDb.get() && !checkingDB.get()) {
-                                            setError(text, true);
-                                        } else {
-                                            showToast("Mostrando dados offline", Toast.LENGTH_SHORT);
-                                        }
-                                    }
-                            );
-
-                        }
+                new OnTaskCompleted() {
+                    @Override
+                    public void onTaskCompleted(Channel channel) {
+                        requestingFeed.set(false);
+                        Log.d(APP_TAG, "loadFeed: onTaskCompleted");
+                        noticias = channel.getArticles();
+                        updateDB(noticias);
                     }
+
+                    @Override
+                    public void onError(Exception e) {
+                        requestingFeed.set(false);
+                        String text = e.getCause().getMessage();
+                        Log.e(APP_TAG, String.format("loadFeed: onError %s", text));
+                        // Colocando erros na tela caso o banco esteja vazio
+                        runOnUiThread(
+                            () -> {
+                                shimmer(false);
+                                swipeRefreshLayout.setRefreshing(false);
+                                showToast(text, Toast.LENGTH_LONG);
+                                if (emptyDb.get() && !checkingDB.get()) {
+                                    setError(text, true);
+                                } else {
+                                    showToast("Mostrando dados offline", Toast.LENGTH_SHORT);
+                                }
+                            }
+                        );
+
+                    }
+                }
             );
             requestingFeed.set(true);
             p.execute(url);
@@ -338,23 +338,4 @@ public class MainActivity extends AppCompatActivity {
         }
         return rssFeed;
     }
-
-    /*private class mainFlow extends AsyncTask<Void, Void, Void> {
-        protected Long doInBackground(URL... urls) {
-            int count = urls.length;
-            long totalSize = 0;
-            for (int i = 0; i < count; i++) {
-                totalSize += Downloader.downloadFile(urls[i]);
-                publishProgress((int) ((i / (float) count) * 100));
-                // Escape early if cancel() is called
-                if (isCancelled()) break;
-            }
-            return totalSize;
-        }
-
-        protected void onPostExecute() {
-
-        }
-    }*/
-
 }
