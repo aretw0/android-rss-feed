@@ -1,14 +1,16 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory app:title="@string/rss_header">
 
         <EditTextPreference
-            app:key="rssfeed"
-            app:title="@string/url_rss"
-            app:useSimpleSummaryProvider="true"
-            app:summary="URL de um feed RSS"
+            android:defaultValue="false"
+            app:defaultValue="false"
             app:dialogMessage="URL de um feed RSS"
-            app:defaultValue="https://"/>
+            app:key="rssfeed"
+            app:summary="URL de um feed RSS"
+            app:title="@string/url_rss"
+            app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
 
