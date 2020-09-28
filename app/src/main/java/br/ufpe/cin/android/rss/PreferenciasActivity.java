@@ -40,11 +40,11 @@ public class PreferenciasActivity extends AppCompatActivity {
                         if (URL_FEED.get() != URL_NOW) {
                             URL_FEED.set(URL_NOW);
                             new Thread(
-                                    () -> {
-                                        NoticiasDB db = NoticiasDB.getInstance(getApplicationContext());
-                                        NoticiasDAO dao = db.obterDAO();
-                                        dao.nukeTable();
-                                    }
+                                () -> {
+                                    NoticiasDB db = NoticiasDB.getInstance(getApplicationContext());
+                                    NoticiasDAO dao = db.obterDAO();
+                                    dao.nukeTable();
+                                }
                             ).start();
                         }
                     }
