@@ -9,7 +9,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -51,6 +54,9 @@ public class MainActivity extends AppCompatActivity {
     // flag p/ check do banco sendo feito compartilhada entre threads
     private AtomicReference<Boolean> checkingDB;
 
+    private ServiceReceiver serviceReceiver;
+
+
     // Declarando recycler view
     RecyclerView conteudoRSS;
     RssAdapter adapter;
@@ -63,26 +69,28 @@ public class MainActivity extends AppCompatActivity {
     TextView errorMessage;
     CardView errorCard;
 
+    // Service
+    Intent service;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        APP_TAG = getString(R.string.app_name).concat(" (MainActivity)");
+        Log.d(APP_TAG, "onCreate");
 
         emptyDb = new AtomicReference<>(true);
         requestingFeed = new AtomicReference<>(false);
         checkingDB = new AtomicReference<>(false);
 
-        APP_TAG = getString(R.string.app_name).concat(" (MainActivity)");
-        Log.d(APP_TAG, "onCreate");
-
-        // para mostrar mensagens de erro
+                // para mostrar mensagens de erro
         errorCard = findViewById(R.id.errorCard);
         errorMessage = findViewById(R.id.errorMessage);
         Button errorButton = findViewById(R.id.botaoError);
 
         errorButton.setOnClickListener(
             v -> {
-                loadFeed(getLatestFeed());
+                startRssService(ServiceConstants.DATA_REFRESH.getFlag());
             }
         );
 
@@ -92,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
             new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
                 public void onRefresh() {
-                    loadFeed(getLatestFeed());
+                    startRssService(ServiceConstants.DATA_REFRESH.getFlag());
                 }
             }
         );
@@ -144,14 +152,22 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         Log.d(APP_TAG, "onStart");
+        requestingFeed.set(true);
+        shimmer(true);
+        startRssService(ServiceConstants.DATA_REFRESH.getFlag());
         checkDB();
-        loadFeed(getLatestFeed());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         Log.d(APP_TAG, "onResume");
+        if (serviceReceiver == null) serviceReceiver = new ServiceReceiver();
+        IntentFilter intentFilter = new IntentFilter(ServiceConstants.DATA_UPDATE.getFlag());
+        intentFilter.addAction(ServiceConstants.XML_REQUEST.getFlag());
+        intentFilter.addAction(ServiceConstants.DATA_ERROR.getFlag());
+        intentFilter.addAction(ServiceConstants.XML_ERROR.getFlag());
+        registerReceiver(serviceReceiver, intentFilter);
     }
 
     @Override
@@ -159,10 +175,18 @@ public class MainActivity extends AppCompatActivity {
         Log.d(APP_TAG, "onPause");
         // Referente ao shimmer effect
         shimmer(false);
+        if (serviceReceiver != null) unregisterReceiver(serviceReceiver);
         super.onPause();
     }
 
+    private void startRssService(String action) {
+        service = new Intent(this,RssService.class);
+        service.setAction(action);
+        startService(service);
+    }
+
     private void checkDB() {
+        Log.d(APP_TAG, "checkDB");
         checkingDB.set(true);
         new Thread(
             () -> {
@@ -174,12 +198,6 @@ public class MainActivity extends AppCompatActivity {
                 checkingDB.set(false);
             }
         ).start();
-    }
-
-    // Facilitador para pegar ultimo Valor
-    private String getLatestFeed() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        return prefs.getString(RSS_FEED, getString(R.string.feed_padrao));
     }
 
     private void populateRecycler(List<Noticia> noticias) {
@@ -197,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
                         setError("Não há dados para serem mostrados",true);
                     } else {
                         swipeRefreshLayout.setVisibility(View.VISIBLE);
+                        setError("",false);
                     }
                 }
             }
@@ -205,14 +224,18 @@ public class MainActivity extends AppCompatActivity {
 
     // Referente ao shimmer effect
     private void shimmer(boolean show) {
-        if (show) {
-            swipeRefreshLayout.setVisibility(View.GONE);
-            shimmerFrameLayout.setVisibility(View.VISIBLE);
-            shimmerFrameLayout.startShimmer();
-        } else {
-            shimmerFrameLayout.stopShimmer();
-            shimmerFrameLayout.setVisibility(View.GONE);
-        }
+        runOnUiThread(
+            () -> {
+                if (show) {
+                    swipeRefreshLayout.setVisibility(View.GONE);
+                    shimmerFrameLayout.setVisibility(View.VISIBLE);
+                    shimmerFrameLayout.startShimmer();
+                } else {
+                    shimmerFrameLayout.stopShimmer();
+                    shimmerFrameLayout.setVisibility(View.GONE);
+                }
+            }
+        );
     }
 
     private void setError(String message, boolean show) {
@@ -225,14 +248,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showToast(String message, int duration) {
-        Toast.makeText(
-            getApplicationContext(),
-            message,
-            duration
-        ).show();
+        runOnUiThread(
+            () -> {
+                Toast.makeText(
+                        getApplicationContext(),
+                        message,
+                        duration
+                ).show();
+            }
+        );
     }
 
-    private void updateDB(List<Article> news) {
+   /* private void updateDB(List<Article> news) {
         new Thread(() -> {
             Noticia[] nots = {};
             List<Noticia> noticias = new ArrayList<>(Arrays.asList(nots));
@@ -314,27 +341,48 @@ public class MainActivity extends AppCompatActivity {
             requestingFeed.set(true);
             p.execute(url);
         }
+    }*/
+
+    private void handleBroadCastError(String text) {
+        runOnUiThread(
+            () -> {
+                shimmer(false);
+                swipeRefreshLayout.setRefreshing(false);
+                showToast(text, Toast.LENGTH_LONG);
+                if (emptyDb.get() && !checkingDB.get()) {
+                    setError(text, true);
+                } else {
+                    showToast("Mostrando dados offline", Toast.LENGTH_SHORT);
+                }
+            }
+        );
     }
 
-    private String getRssFeed(String feed) throws IOException {
-        InputStream in = null;
-        String rssFeed = "";
-        try {
-            URL url = new URL(feed);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            in = conn.getInputStream();
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024];
-            for (int count; (count = in.read(buffer)) != -1; ) {
-                out.write(buffer, 0, count);
-            }
-            byte[] response = out.toByteArray();
-            rssFeed = new String(response, "UTF-8");
-        } finally {
-            if (in != null) {
-                in.close();
+    private class ServiceReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            String payload = intent.getStringExtra("PAYLOAD");
+            boolean state = intent.getBooleanExtra("STATE",false);;
+            Log.d(APP_TAG, String.format("onReceive: %s %s %b", action, payload, state));
+            if (intent.getAction().equals(ServiceConstants.DATA_UPDATE.getFlag())) {
+                // Do stuff - maybe update my view based on the changed DB contents
+                requestingFeed.set(false);
+                checkDB();
+            } else if (intent.getAction().equals(ServiceConstants.XML_REQUEST.getFlag())) {
+                requestingFeed.set(true);
+                runOnUiThread(
+                    () -> {
+                        swipeRefreshLayout.setRefreshing(true);
+                    }
+                );
+            } else if (intent.getAction().equals(ServiceConstants.DATA_ERROR.getFlag())) {
+                requestingFeed.set(false);
+                handleBroadCastError(intent.getStringExtra("PAYLOAD"));
+            } else if (intent.getAction().equals(ServiceConstants.XML_ERROR.getFlag())) {
+                requestingFeed.set(false);
+                handleBroadCastError(intent.getStringExtra("PAYLOAD"));
             }
         }
-        return rssFeed;
     }
 }

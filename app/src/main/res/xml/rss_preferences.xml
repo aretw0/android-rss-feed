@@ -4,8 +4,7 @@
     <PreferenceCategory app:title="@string/rss_header">
 
         <EditTextPreference
-            android:defaultValue="false"
-            app:defaultValue="false"
+            app:defaultValue="@string/feed_padrao"
             app:dialogMessage="URL de um feed RSS"
             app:key="rssfeed"
             app:summary="URL de um feed RSS"
