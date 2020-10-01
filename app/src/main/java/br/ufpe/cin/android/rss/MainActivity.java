@@ -1,6 +1,5 @@
 package br.ufpe.cin.android.rss;
 
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
@@ -13,45 +12,30 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.shimmer.ShimmerFrameLayout;
 import com.prof.rssparser.Article;
-import com.prof.rssparser.Channel;
-import com.prof.rssparser.OnTaskCompleted;
-import com.prof.rssparser.Parser;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class MainActivity extends AppCompatActivity {
 
-    private String APP_TAG;
+    private String TAG;
     private String RSS_FEED = "rssfeed";
 
     // flag p/ banco vazio compartilhada entre threads
     private AtomicReference<Boolean> emptyDb;
     // flag p/ request sendo feito compartilhada entre threads
     private AtomicReference<Boolean> requestingFeed;
-    // flag p/ check do banco sendo feito compartilhada entre threads
+    // flag p/ checking do banco sendo feito compartilhada entre threads
     private AtomicReference<Boolean> checkingDB;
 
     private ServiceReceiver serviceReceiver;
@@ -60,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
     // Declarando recycler view
     RecyclerView conteudoRSS;
     RssAdapter adapter;
-    List<Article> noticias;
     ShimmerFrameLayout shimmerFrameLayout;
     SwipeRefreshLayout swipeRefreshLayout;
 
@@ -76,20 +59,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        APP_TAG = getString(R.string.app_name).concat(" (MainActivity)");
-        Log.d(APP_TAG, "onCreate");
+        TAG = getString(R.string.app_name).concat(" (MainActivity)");
+        Log.d(TAG, "onCreate");
 
         emptyDb = new AtomicReference<>(true);
         requestingFeed = new AtomicReference<>(false);
         checkingDB = new AtomicReference<>(false);
-
-                // para mostrar mensagens de erro
+        // para mostrar mensagens de erro
         errorCard = findViewById(R.id.errorCard);
         errorMessage = findViewById(R.id.errorMessage);
         Button errorButton = findViewById(R.id.botaoError);
 
+        // listener do click do botão do card de error
         errorButton.setOnClickListener(
             v -> {
+                shimmer(true);
                 startRssService(ServiceConstants.DATA_REFRESH.getFlag());
             }
         );
@@ -117,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
         conteudoRSS.setAdapter(adapter);
 
         // Shimmer element para efeito shimmer
-        shimmerFrameLayout = (ShimmerFrameLayout) findViewById(R.id.shimmerFrameLayout);
+        shimmerFrameLayout = findViewById(R.id.shimmerFrameLayout);
 
         // ponto 4: adicionando toolbar
         toolbar = findViewById(R.id.toolbar);
@@ -137,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        Log.d(APP_TAG, String.format("onOptionsItemSelected: %s", item.getTitle()));
+        Log.d(TAG, String.format("onOptionsItemSelected: %s", item.getTitle()));
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_edit) {
             startActivity(new Intent(getApplicationContext(),
@@ -151,8 +135,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        Log.d(APP_TAG, "onStart");
-        requestingFeed.set(true);
+        Log.d(TAG, "onStart");
+        setError("", false);
         shimmer(true);
         startRssService(ServiceConstants.DATA_REFRESH.getFlag());
         checkDB();
@@ -161,10 +145,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(APP_TAG, "onResume");
+        Log.d(TAG, "onResume");
         if (serviceReceiver == null) serviceReceiver = new ServiceReceiver();
         IntentFilter intentFilter = new IntentFilter(ServiceConstants.DATA_UPDATE.getFlag());
-        intentFilter.addAction(ServiceConstants.XML_REQUEST.getFlag());
         intentFilter.addAction(ServiceConstants.DATA_ERROR.getFlag());
         intentFilter.addAction(ServiceConstants.XML_ERROR.getFlag());
         registerReceiver(serviceReceiver, intentFilter);
@@ -172,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        Log.d(APP_TAG, "onPause");
+        Log.d(TAG, "onPause");
         // Referente ao shimmer effect
         shimmer(false);
         if (serviceReceiver != null) unregisterReceiver(serviceReceiver);
@@ -180,13 +163,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startRssService(String action) {
+        requestingFeed.set(true);
         service = new Intent(this,RssService.class);
         service.setAction(action);
         startService(service);
     }
 
     private void checkDB() {
-        Log.d(APP_TAG, "checkDB");
+        Log.d(TAG, "checkDB");
         checkingDB.set(true);
         new Thread(
             () -> {
@@ -194,31 +178,39 @@ public class MainActivity extends AppCompatActivity {
                 NoticiasDAO dao = db.obterDAO();
                 List<Noticia> noticias = dao.todasNoticias();
                 emptyDb.set(noticias.isEmpty());
-                populateRecycler(noticias);
                 checkingDB.set(false);
+                if (!emptyDb.get()) {
+                    populateRecycler(noticias);
+                } else if(!requestingFeed.get()) {
+                    // Alterando layout para mostrar os dados ou erro
+                    setError("Não há dados para serem mostrados",true);
+                }
             }
         ).start();
     }
 
     private void populateRecycler(List<Noticia> noticias) {
-        Log.d(APP_TAG, "populateRecyler");
+        Log.d(TAG, "populateRecyler");
         runOnUiThread(
             () -> {
                 adapter.setNoticias(noticias);
                 adapter.notifyDataSetChanged();
-                if (!requestingFeed.get()) {
-                    // Alterando layout para mostrar os dados ou erro
-                    shimmer(false);
-                    swipeRefreshLayout.setRefreshing(false);
-                    if (noticias.isEmpty()) {
-                        swipeRefreshLayout.setVisibility(View.GONE);
-                        setError("Não há dados para serem mostrados",true);
-                    } else {
-                        swipeRefreshLayout.setVisibility(View.VISIBLE);
-                        setError("",false);
-                    }
-                }
+                shimmer(false);
+                setError("", false);
+                swipeRefreshLayout.setVisibility(View.VISIBLE);
             }
+        );
+    }
+
+    private void showToast(String message, int duration) {
+        runOnUiThread(
+                () -> {
+                    Toast.makeText(
+                            getApplicationContext(),
+                            message,
+                            duration
+                    ).show();
+                }
         );
     }
 
@@ -227,36 +219,67 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(
             () -> {
                 if (show) {
+                    errorCard.setVisibility(View.GONE);
                     swipeRefreshLayout.setVisibility(View.GONE);
                     shimmerFrameLayout.setVisibility(View.VISIBLE);
                     shimmerFrameLayout.startShimmer();
                 } else {
                     shimmerFrameLayout.stopShimmer();
                     shimmerFrameLayout.setVisibility(View.GONE);
+                    swipeRefreshLayout.setRefreshing(false);
                 }
             }
         );
     }
 
     private void setError(String message, boolean show) {
-        if (show) {
-            errorCard.setVisibility(View.VISIBLE);
-            errorMessage.setText(message);
-        } else {
-            errorCard.setVisibility(View.GONE);
-        }
-    }
-
-    private void showToast(String message, int duration) {
         runOnUiThread(
-            () -> {
-                Toast.makeText(
-                        getApplicationContext(),
-                        message,
-                        duration
-                ).show();
+            () ->{
+                if (show) {
+                    shimmer(false);
+                    swipeRefreshLayout.setVisibility(View.GONE);
+                    errorCard.setVisibility(View.VISIBLE);
+                    errorMessage.setText(message);
+                } else {
+                    errorCard.setVisibility(View.GONE);
+                }
             }
         );
+    }
+
+    private void handleBroadCastError(String text) {
+        runOnUiThread(
+            () -> {
+                showToast(text, Toast.LENGTH_LONG);
+                if (emptyDb.get() && !checkingDB.get()) {
+                    setError(text, true);
+                } else {
+                    shimmer(false);
+                    showToast("Mostrando dados offline", Toast.LENGTH_SHORT);
+                }
+            }
+        );
+    }
+
+    private class ServiceReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            String payload = intent.getStringExtra("PAYLOAD");
+            boolean state = intent.getBooleanExtra("STATE",false);;
+            Log.d(TAG, String.format("onReceive: %s %s %b", action, payload, state));
+            if (intent.getAction().equals(ServiceConstants.DATA_UPDATE.getFlag())) {
+                // Do stuff - maybe update my view based on the changed DB contents
+                requestingFeed.set(false);
+                checkDB();
+            } else if (intent.getAction().equals(ServiceConstants.DATA_ERROR.getFlag())) {
+                requestingFeed.set(false);
+                handleBroadCastError(intent.getStringExtra("PAYLOAD"));
+            } else if (intent.getAction().equals(ServiceConstants.XML_ERROR.getFlag())) {
+                requestingFeed.set(false);
+                handleBroadCastError(intent.getStringExtra("PAYLOAD"));
+            }
+        }
     }
 
    /* private void updateDB(List<Article> news) {
@@ -295,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadFeed(String url) {
-        Log.d(APP_TAG, String.format("loadFeed: %s %b", url, requestingFeed.get()));
+        Log.d(TAG, String.format("loadFeed: %s %b", url, requestingFeed.get()));
         if (!requestingFeed.get()) {
 
             // Tirando qualquer erro da tela e ativando o efeito shimmer
@@ -311,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onTaskCompleted(Channel channel) {
                         requestingFeed.set(false);
-                        Log.d(APP_TAG, "loadFeed: onTaskCompleted");
+                        Log.d(TAG, "loadFeed: onTaskCompleted");
                         noticias = channel.getArticles();
                         updateDB(noticias);
                     }
@@ -320,7 +343,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onError(Exception e) {
                         requestingFeed.set(false);
                         String text = e.getCause().getMessage();
-                        Log.e(APP_TAG, String.format("loadFeed: onError %s", text));
+                        Log.e(TAG, String.format("loadFeed: onError %s", text));
                         // Colocando erros na tela caso o banco esteja vazio
                         runOnUiThread(
                             () -> {
@@ -342,47 +365,4 @@ public class MainActivity extends AppCompatActivity {
             p.execute(url);
         }
     }*/
-
-    private void handleBroadCastError(String text) {
-        runOnUiThread(
-            () -> {
-                shimmer(false);
-                swipeRefreshLayout.setRefreshing(false);
-                showToast(text, Toast.LENGTH_LONG);
-                if (emptyDb.get() && !checkingDB.get()) {
-                    setError(text, true);
-                } else {
-                    showToast("Mostrando dados offline", Toast.LENGTH_SHORT);
-                }
-            }
-        );
-    }
-
-    private class ServiceReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            String payload = intent.getStringExtra("PAYLOAD");
-            boolean state = intent.getBooleanExtra("STATE",false);;
-            Log.d(APP_TAG, String.format("onReceive: %s %s %b", action, payload, state));
-            if (intent.getAction().equals(ServiceConstants.DATA_UPDATE.getFlag())) {
-                // Do stuff - maybe update my view based on the changed DB contents
-                requestingFeed.set(false);
-                checkDB();
-            } else if (intent.getAction().equals(ServiceConstants.XML_REQUEST.getFlag())) {
-                requestingFeed.set(true);
-                runOnUiThread(
-                    () -> {
-                        swipeRefreshLayout.setRefreshing(true);
-                    }
-                );
-            } else if (intent.getAction().equals(ServiceConstants.DATA_ERROR.getFlag())) {
-                requestingFeed.set(false);
-                handleBroadCastError(intent.getStringExtra("PAYLOAD"));
-            } else if (intent.getAction().equals(ServiceConstants.XML_ERROR.getFlag())) {
-                requestingFeed.set(false);
-                handleBroadCastError(intent.getStringExtra("PAYLOAD"));
-            }
-        }
-    }
 }

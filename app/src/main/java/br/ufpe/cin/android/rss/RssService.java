@@ -89,7 +89,8 @@ public class RssService extends Service {
         }).start();
     }
 
-    public void loadFeed() {
+    // carregar feed
+    private void loadFeed() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String url = prefs.getString(RSS_FEED, getString(R.string.feed_padrao));
         Log.d(TAG, String.format("loadFeed: %s %b", url, requestingFeed.get()));
@@ -99,23 +100,27 @@ public class RssService extends Service {
                 new OnTaskCompleted() {
                     @Override
                     public void onTaskCompleted(Channel channel) {
+                        requestingFeed.set(false);
                         Log.d(TAG, "loadFeed: onTaskCompleted");
-                        updateDB(channel.getArticles());
+                        List<Article> noticias = channel.getArticles();
+                        updateDB(noticias);
                     }
 
                     @Override
                     public void onError(Exception e) {
+                        requestingFeed.set(false);
                         String text = e.getCause().getMessage();
                         Log.e(TAG, String.format("loadFeed: onError %s", text));
                         doBroadCast(ServiceConstants.XML_ERROR.getFlag(),text,false);
                     }
                 }
             );
-            doBroadCast(ServiceConstants.XML_REQUEST.getFlag(),"",true);
+            requestingFeed.set(true);
             p.execute(url);
         }
     }
 
+    // função para facilitar o broadcast para a activity
     private void doBroadCast(String action, String payload, boolean state) {
         Log.d(TAG, String.format("doBroadCast: %s %s %b",action, payload, state));
         Intent to_send = new Intent(action);
