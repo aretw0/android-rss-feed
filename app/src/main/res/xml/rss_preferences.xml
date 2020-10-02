@@ -13,7 +13,7 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/sync_header">
+    <!--<PreferenceCategory app:title="@string/sync_header">
 
         <SwitchPreferenceCompat
             app:defaultValue="true"
@@ -22,6 +22,6 @@
             app:summaryOff="@string/attachment_summary_off"
             app:summaryOn="@string/attachment_summary_on"/>
 
-    </PreferenceCategory>
+    </PreferenceCategory>-->
 
 </PreferenceScreen>

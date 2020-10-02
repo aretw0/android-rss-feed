@@ -26,6 +26,8 @@ public class RssService extends Service {
     // flag p/ request sendo feito compartilhada entre threads
     private AtomicReference<Boolean> requestingFeed;
 
+    SharedPreferences prefs;
+
     // trecho para acesso da instância,
     private final IBinder mBinder = new RssBinder();
 
@@ -48,6 +50,9 @@ public class RssService extends Service {
 
         // inicializando atomic reference
         requestingFeed = new AtomicReference<>(false);
+
+        // criando referência do shared preferences
+        prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
     }
 
     @Override
@@ -65,8 +70,6 @@ public class RssService extends Service {
             } else if(action.equals(ServiceConstants.DATA_REFRESH.getFlag())) {
                 // Ação que faz o service chamar a função de carregamento do feed
                 loadFeed();
-            } else if (action.equals(ServiceConstants.INIT_SERVICE.getFlag())) {
-                // apenas inicio do start
             }
         }
         return START_STICKY;
@@ -100,7 +103,6 @@ public class RssService extends Service {
     // carregar feed
     private void loadFeed() {
         // Acesso da sharedPreferences
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String url = prefs.getString(RSS_FEED, getString(R.string.feed_padrao));
         Log.d(TAG, String.format("loadFeed: %s %b", url, requestingFeed.get()));
         if (!requestingFeed.get()) {

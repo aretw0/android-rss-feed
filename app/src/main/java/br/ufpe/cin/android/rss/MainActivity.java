@@ -77,15 +77,15 @@ public class MainActivity extends AppCompatActivity {
         errorButton.setOnClickListener(
             v -> {
                 shimmer(true);
-                startRssService(ServiceConstants.DATA_REFRESH.getFlag());
-            }
+                startRssService(ServiceConstants.DATA_REFRESH.getFlag(), true);
+    }
         );
 
         // pull to refresh
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         swipeRefreshLayout.setOnRefreshListener(
             () -> {
-                startRssService(ServiceConstants.DATA_REFRESH.getFlag());
+                startRssService(ServiceConstants.DATA_REFRESH.getFlag(), true);
             }
         );
         // Preparando recycler view
@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
         setError("", false);
         shimmer(true);
         // iniciando serviço
-        startRssService(ServiceConstants.INIT_SERVICE.getFlag());
+        startRssService(ServiceConstants.INIT_SERVICE.getFlag(), false);
         checkDB();
     }
 
@@ -168,8 +168,8 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
     }
 
-    private void startRssService(String action) {
-        requestingFeed.set(true);
+    private void startRssService(String action, boolean request) {
+        requestingFeed.set(request);
         service = new Intent(this,RssService.class);
         service.setAction(action);
         startService(service);
@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
                         setError("Não há dados para serem mostrados",true);
                     } else {
                         checkedDB.set(true);
-                        startRssService(ServiceConstants.DATA_REFRESH.getFlag());
+                        startRssService(ServiceConstants.DATA_REFRESH.getFlag(), true);
                     }
                 }
             }

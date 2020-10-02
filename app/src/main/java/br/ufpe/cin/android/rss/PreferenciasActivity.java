@@ -30,7 +30,7 @@ public class PreferenciasActivity extends AppCompatActivity {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.settings,new PrefsFragment((sharedPreferences, key) -> {
-                    Log.d(APP_TAG, "OnSharedPreferenceChangeListener");
+                    Log.d(APP_TAG, "OnSharedPreferenceChangeListener: ".concat(key));
                     // listener
                     if (key.equals(RSS_FEED)){
                         // Write your code here
