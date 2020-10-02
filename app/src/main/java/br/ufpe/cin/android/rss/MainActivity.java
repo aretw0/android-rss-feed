@@ -37,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private AtomicReference<Boolean> requestingFeed;
     // flag p/ checking do banco sendo feito compartilhada entre threads
     private AtomicReference<Boolean> checkingDB;
+    // flag p/ checked do banco sendo feito compartilhada entre threads
+    private AtomicReference<Boolean> checkedDB;
 
     private ServiceReceiver serviceReceiver;
 
@@ -65,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
         emptyDb = new AtomicReference<>(true);
         requestingFeed = new AtomicReference<>(false);
         checkingDB = new AtomicReference<>(false);
+        checkedDB = new AtomicReference<>(false);
+
         // para mostrar mensagens de erro
         errorCard = findViewById(R.id.errorCard);
         errorMessage = findViewById(R.id.errorMessage);
@@ -138,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "onStart");
         setError("", false);
         shimmer(true);
-        startRssService(ServiceConstants.DATA_REFRESH.getFlag());
+        // startRssService(ServiceConstants.DATA_REFRESH.getFlag());
         checkDB();
     }
 
@@ -183,7 +187,12 @@ public class MainActivity extends AppCompatActivity {
                     populateRecycler(noticias);
                 } else if(!requestingFeed.get()) {
                     // Alterando layout para mostrar os dados ou erro
-                    setError("Não há dados para serem mostrados",true);
+                    if (checkedDB.get()) {
+                        setError("Não há dados para serem mostrados",true);
+                    } else {
+                        checkedDB.set(true);
+                        startRssService(ServiceConstants.DATA_REFRESH.getFlag());
+                    }
                 }
             }
         ).start();
