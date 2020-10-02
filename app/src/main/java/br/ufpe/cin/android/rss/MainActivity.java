@@ -85,11 +85,8 @@ public class MainActivity extends AppCompatActivity {
         // pull to refresh
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         swipeRefreshLayout.setOnRefreshListener(
-            new SwipeRefreshLayout.OnRefreshListener() {
-                @Override
-                public void onRefresh() {
-                    startRssService(ServiceConstants.DATA_REFRESH.getFlag());
-                }
+            () -> {
+                startRssService(ServiceConstants.DATA_REFRESH.getFlag());
             }
         );
         // Preparando recycler view
