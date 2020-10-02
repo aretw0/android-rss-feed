@@ -26,6 +26,7 @@ public class RssService extends Service {
     // flag p/ request sendo feito compartilhada entre threads
     private AtomicReference<Boolean> requestingFeed;
 
+    // trecho para acesso da instância,
     private final IBinder mBinder = new RssBinder();
 
     public class RssBinder extends Binder {
@@ -34,17 +35,18 @@ public class RssService extends Service {
             return RssService.this;
         }
     }
-
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
     }
+
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate");
 
+        // inicializando atomic reference
         requestingFeed = new AtomicReference<>(false);
     }
 
@@ -61,7 +63,10 @@ public class RssService extends Service {
             if (action.equals("stop")) {
                 stopSelf();
             } else if(action.equals(ServiceConstants.DATA_REFRESH.getFlag())) {
+                // Ação que faz o service chamar a função de carregamento do feed
                 loadFeed();
+            } else if (action.equals(ServiceConstants.INIT_SERVICE.getFlag())) {
+                // apenas inicio do start
             }
         }
         return START_STICKY;
@@ -79,11 +84,14 @@ public class RssService extends Service {
             NoticiasDB db = NoticiasDB.getInstance(this);
             NoticiasDAO dao = db.obterDAO();;
             try {
+                // tenta inserir
                 dao.inserirNoticias(noticias);
+                // "Avisa" a activity sobre a inserção no banco
                 doBroadCast(ServiceConstants.DATA_UPDATE.getFlag(),"",true);
             } catch (Exception err) {
                 String text = err.getMessage();
                 Log.d(TAG, "updateDB: ".concat(text));
+                // "Avisa" a activity sobre algum erro de banco
                 doBroadCast(ServiceConstants.DATA_ERROR.getFlag(),text,false);
             }
         }).start();
@@ -91,6 +99,7 @@ public class RssService extends Service {
 
     // carregar feed
     private void loadFeed() {
+        // Acesso da sharedPreferences
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String url = prefs.getString(RSS_FEED, getString(R.string.feed_padrao));
         Log.d(TAG, String.format("loadFeed: %s %b", url, requestingFeed.get()));
@@ -111,6 +120,7 @@ public class RssService extends Service {
                         requestingFeed.set(false);
                         String text = e.getCause().getMessage();
                         Log.e(TAG, String.format("loadFeed: onError %s", text));
+                        // Avisando a activity que deu erro processamento do xml
                         doBroadCast(ServiceConstants.XML_ERROR.getFlag(),text,false);
                     }
                 }

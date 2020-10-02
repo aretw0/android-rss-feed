@@ -22,7 +22,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.shimmer.ShimmerFrameLayout;
-import com.prof.rssparser.Article;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -139,7 +138,8 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "onStart");
         setError("", false);
         shimmer(true);
-        // startRssService(ServiceConstants.DATA_REFRESH.getFlag());
+        // iniciando serviço
+        startRssService(ServiceConstants.INIT_SERVICE.getFlag());
         checkDB();
     }
 
@@ -158,9 +158,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         Log.d(TAG, "onPause");
         // Referente ao shimmer effect
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
         shimmer(false);
         if (serviceReceiver != null) unregisterReceiver(serviceReceiver);
-        super.onPause();
+        super.onStop();
     }
 
     private void startRssService(String action) {

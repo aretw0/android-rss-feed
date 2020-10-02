@@ -2,15 +2,18 @@
     <string name="app_name">RSS - ALVESSIL</string>
     <string name="feed_padrao">https://g1.globo.com/dynamo/rss2.xml</string>
     <string name="imagem_cd">Imagem da notícia</string>
+    <string name="error_botao">Tentar novamente?</string>
 
     <!-- Preference Titles -->
     <string name="rss_header">RSS</string>
 <!--    <string name="sync_header">Sync</string>-->
 
     <!-- Rss Preferences -->
-<!--    <string name="title_rss">Título</string>-->
     <string name="url_rss">URL</string>
-    <string name="error_botao">Tentar novamente?</string>
+
+    <string name="sync_header">Sincronização</string>
     <!-- Sync Preferences -->
-<!--    <string name="sync_title">Sync email periodically</string>-->
+    <string name="sync_title">Modo</string>
+    <string name="attachment_summary_off">Manual</string>
+    <string name="attachment_summary_on">Automatico</string>
 </resources>
